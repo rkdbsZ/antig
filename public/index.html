@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 이미지 퀴즈 생성기 - EduQuiz</title>
+  <!-- Google Fonts: Inter & Outfit & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons for visual enhancements -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Vanilla CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 배경 장식용 그라데이션 블러 서클 -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="app-container">
+    <!-- 헤더 섹션 -->
+    <header class="app-header">
+      <div class="logo">
+        <i class="fa-solid fa-brain-circuit brain-icon"></i>
+        <span class="logo-text">Edu<span>Quiz</span></span>
+      </div>
+      <p class="subtitle">사진을 업로드하면 Gemini AI가 스마트한 학습 퀴즈를 자동으로 만들어 줍니다.</p>
+    </header>
+
+    <main class="main-content">
+      <!-- 1단계: 파일 업로드 및 분석 대기 화면 -->
+      <section id="upload-section" class="card fade-in">
+        <div class="upload-area" id="drop-zone">
+          <input type="file" id="file-input" accept="image/*" hidden>
+          <div class="upload-icon-wrapper">
+            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+          </div>
+          <h3>이미지 파일을 드래그 앤 드롭 하거나 클릭하세요</h3>
+          <p class="upload-tip">교과서 사진, 필기 노트, 영수증, 도표 등 텍스트와 정보가 담긴 이미지라면 무엇이든 좋습니다. (최대 10MB)</p>
+          <button type="button" class="btn btn-primary" id="select-btn">
+            <i class="fa-regular fa-image"></i> 이미지 선택하기
+          </button>
+        </div>
+
+        <!-- 이미지 선택 시 보여지는 프리뷰 영역 -->
+        <div class="preview-area d-none" id="preview-container">
+          <div class="preview-wrapper">
+            <img id="image-preview" src="" alt="업로드 이미지 미리보기">
+            <button type="button" class="btn-remove" id="remove-btn" title="이미지 삭제">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="preview-actions">
+            <button type="button" class="btn btn-success btn-lg" id="generate-btn">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> 퀴즈 생성 시작
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2단계: 로딩 및 진행 상황 표시기 -->
+      <section id="loading-section" class="card loading-card fade-in d-none">
+        <div class="spinner-wrapper">
+          <div class="spinner"></div>
+          <i class="fa-solid fa-wand-magic-sparkles magic-icon"></i>
+        </div>
+        <h2>Gemini AI가 이미지를 분석하는 중...</h2>
+        <p class="loading-message">이미지에서 텍스트와 시각 자료를 추출하여 고품질 학습 문제를 만들고 있습니다. 잠시만 기다려 주세요.</p>
+        <!-- 진행 상황 트래커 애니메이션 -->
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <div class="status-steps">
+          <span class="status-step active" id="step-1"><i class="fa-solid fa-check"></i> 이미지 분석</span>
+          <span class="status-step" id="step-2"><i class="fa-solid fa-circle-dot"></i> 문제 출제</span>
+          <span class="status-step" id="step-3"><i class="fa-solid fa-circle-dot"></i> 해설 작성</span>
+        </div>
+      </section>
+
+      <!-- 3단계: 인터랙티브 퀴즈 카드 풀이 화면 -->
+      <section id="quiz-section" class="d-none">
+        <div class="quiz-header">
+          <div class="quiz-info">
+            <span class="quiz-badge" id="quiz-counter">문제 1 / 5</span>
+            <h2 id="quiz-title">퀴즈를 풀어보세요!</h2>
+          </div>
+          <!-- 전체 진행률 바 -->
+          <div class="quiz-progress-track">
+            <div class="quiz-progress-bar" id="quiz-progress-bar" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <!-- 퀴즈 카드 본체 -->
+        <div class="quiz-card-wrapper">
+          <div class="card quiz-card fade-in" id="quiz-card">
+            <!-- 질문 영역 -->
+            <div class="quiz-question-container">
+              <span class="question-number-tag" id="question-number">Q1.</span>
+              <h3 class="question-text" id="question-text">질문 텍스트가 표시되는 영역입니다.</h3>
+            </div>
+            
+            <!-- 보기(선택지) 영역 -->
+            <div class="options-container" id="options-container">
+              <!-- JS로 동적 생성됨 -->
+            </div>
+
+            <!-- 해설 영역 (정답 선택 시 슬라이드 노출) -->
+            <div class="explanation-box d-none" id="explanation-box">
+              <div class="explanation-title">
+                <i class="fa-solid fa-circle-info"></i> 해설 및 피드백
+              </div>
+              <p class="explanation-text" id="explanation-text">해설 내용이 여기에 들어갑니다.</p>
+            </div>
+
+            <!-- 하단 네비게이션 버튼 -->
+            <div class="quiz-actions">
+              <button type="button" class="btn btn-outline" id="prev-btn" disabled>
+                <i class="fa-solid fa-arrow-left"></i> 이전 문제
+              </button>
+              <button type="button" class="btn btn-primary" id="next-btn" disabled>
+                다음 문제 <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4단계: 결과 리포트 화면 -->
+      <section id="result-section" class="card result-card fade-in d-none">
+        <div class="result-header">
+          <div class="trophy-wrapper">
+            <i class="fa-solid fa-trophy trophy-icon"></i>
+          </div>
+          <h2>학습 결과 리포트</h2>
+          <p>모든 문제를 완료하였습니다! 아래에서 성적과 해설을 확인하세요.</p>
+        </div>
+
+        <!-- 스코어 대시보드 -->
+        <div class="score-dashboard">
+          <div class="score-circle">
+            <span class="score-number" id="final-score">80</span>
+            <span class="score-label">점</span>
+          </div>
+          <div class="score-stats">
+            <div class="stat-item">
+              <span class="stat-label">전체 문제</span>
+              <span class="stat-value" id="total-questions-stat">5개</span>
+            </div>
+            <div class="stat-item border-left">
+              <span class="stat-label">맞힌 문제</span>
+              <span class="stat-value text-success" id="correct-answers-stat">4개</span>
+            </div>
+            <div class="stat-item border-left">
+              <span class="stat-label">틀린 문제</span>
+              <span class="stat-value text-danger" id="wrong-answers-stat">1개</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 상세 리뷰 목록 (오답 노트 및 해설) -->
+        <div class="review-section">
+          <h3><i class="fa-solid fa-list-check"></i> 전체 문항 상세 분석</h3>
+          <div class="review-list" id="review-list">
+            <!-- JS로 전체 문항 정답 여부와 해설 동적 생성 -->
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button type="button" class="btn btn-secondary" id="retry-btn">
+            <i class="fa-solid fa-rotate-left"></i> 다시 풀기
+          </button>
+          <button type="button" class="btn btn-primary" id="new-quiz-btn">
+            <i class="fa-regular fa-image"></i> 다른 사진으로 만들기
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>&copy; 2026 EduQuiz. Powered by Gemini API.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
