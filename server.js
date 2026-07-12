@@ -26,7 +26,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 이미지 파일 업로드 용량 제한: 최대 10MB
+    fileSize: 50 * 1024 * 1024 // 이미지 파일 업로드 용량 제한: 최대 50MB (기존 10MB에서 상향)
   }
 });
 

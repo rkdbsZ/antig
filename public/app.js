@@ -121,9 +121,9 @@ function handleFile(file) {
     return;
   }
 
-  // 용량 제한 검증 (10MB)
-  if (file.size > 10 * 1024 * 1024) {
-    alert('파일 크기가 너무 큽니다. 10MB 이하의 이미지를 선택해 주세요.');
+  // 용량 제한 검증 (50MB)
+  if (file.size > 50 * 1024 * 1024) {
+    alert('파일 크기가 너무 큽니다. 50MB 이하의 이미지를 선택해 주세요.');
     return;
   }
 
